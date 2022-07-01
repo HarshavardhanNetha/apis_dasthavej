@@ -14,27 +14,31 @@ export default async function createEvent(
        const pubKey = req.body.publicKey
        const eventID = req.body.eventID
        const secret = req.body.secret
+       let sequenceNum = req.body.sequenceNum
        var rootKeypair = StellarSDK.Keypair.fromSecret(secret)
       // var rootKeypair = StellarSDK.Keypair.fromPublicKey(pubKey)
 
        const seq = await serverTest.loadAccount(pubKey);
        console.log(seq.sequence);
+       sequenceNum = sequenceNum - 1;
+       let seqStr = sequenceNum.toString()
 
-         let account =  new StellarSDK.Account(pubKey, seq.sequence);
-         console.log(account);
+         let account =  new StellarSDK.Account(pubKey, seqStr);
+        //  console.log(account);
          var transaction = new StellarSDK.TransactionBuilder(account, {
             fee: StellarSDK.BASE_FEE,
             networkPassphrase: StellarSDK.Networks.TESTNET 
           })
           .addOperation(StellarSDK.Operation.manageData({
-            "name" : "eventID",
-            "value": eventID
+            "name" : eventID,
+            "value": "Approved"
           }))
           .setTimeout(TimeoutInfinite)
           .build();
         
         // transaction.sign(rootKeypair)
         console.log(transaction.toEnvelope().toXDR('base64'));
+        res.status(200).json({"sequence":transaction["_sequence"], "xdr":transaction.toEnvelope().toXDR('base64'), "se.sequence":seq.sequence});
 
         // let op_resp = await serverTest.submitTransaction(transaction)
         
